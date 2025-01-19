@@ -1,29 +1,21 @@
-""" A template script for computer vision projects """
 import cv2
 from time import sleep
 import numpy as np
 import math
 
-frame = cv2.imread('img0.png')
-
-q_unicode = ord('q')
-
-roi = ((220, 160), (370, 270))
-roi_center = (int(roi[0][0] + (roi[1][0] - roi[0][0])/2), int(roi[0][1] + (roi[1][1] - roi[0][1])/2))
-template = cv2.imread('template_camera.png')
-
-
-cap = cv2.VideoCapture(2)
-
 def rotarGrad(originx, originy, angle, rad):
 	return (round(originx+rad*math.cos(-math.radians(angle))), round(originy+rad*math.sin(-math.radians(angle))))
 
+cap = cv2.VideoCapture(2)
+roi = ((220, 160), (370, 270))
+roi_center = (int(roi[0][0] + (roi[1][0] - roi[0][0])/2), int(roi[0][1] + (roi[1][1] - roi[0][1])/2))
+template = cv2.imread('template_camera.png')
 is_detect = False
+q_unicode = ord('q')
 
 while(cap.isOpened()):
-
-	# Capture frame-by-frame
 	ret, frame = cap.read()
+
 	if is_detect == True:
 		crop_img = frame[roi[0][1]:roi[1][1], roi[0][0]:roi[1][0]]
 
@@ -35,37 +27,26 @@ while(cap.isOpened()):
 		kernel_erode = np.ones((1, 1), np.uint8) 
 		img_erosion = cv2.erode(filtered, kernel_erode, iterations=1) 
 
-		grayF = cv2.cvtColor(img_erosion, cv2.COLOR_BGR2GRAY)# Load image, grayscale, Gaussian blur, Otsu's threshold
+		grayF = cv2.cvtColor(img_erosion, cv2.COLOR_BGR2GRAY)
 		blurF = cv2.GaussianBlur(grayF, (3,3), 0)
 		threshF = cv2.threshold(blurF, 0, 255, cv2.THRESH_BINARY)[1]
-		
 
-		image_gray = threshF
 		template_gray = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
+		cv2.imshow('gray_image', threshF)
 
-		cv2.imshow('gray_image', image_gray)
-		# cv2.imshow('gray_template', template_gray)
-		
-		# Variables para almacenar el mejor ángulo y la mejor coincidencia
 		best_angle = 0
 		best_match = -1
 		best_template = None
 		
 		for angle in range(0, 360, 1):
-			# Rotar la plantilla
 			template_height, template_width = template_gray.shape
 			rotation_matrix = cv2.getRotationMatrix2D((template_width / 2, template_height / 2), angle, 1)
 			rotated_template = cv2.warpAffine(template_gray, rotation_matrix, (template_width, template_height))
 			cv2.imshow('rotated_template', rotated_template)
 
+			result = cv2.matchTemplate(threshF, rotated_template, cv2.TM_CCOEFF_NORMED)
 
-			# Aplicar la comparación de plantillas
-			result = cv2.matchTemplate(image_gray, rotated_template, cv2.TM_CCOEFF_NORMED)
-
-			# Encontrar la mejor coincidencia
 			_, max_val, _, _ = cv2.minMaxLoc(result)
-
-			# Actualizar el mejor ángulo si se encuentra una mejor coincidencia
 			if max_val > best_match:
 				best_match = max_val
 				best_angle = angle
@@ -82,12 +63,13 @@ while(cap.isOpened()):
 	cv2.imshow('Frame', frame)
 	
 	key = cv2.waitKey(25)
-	# Press Q on keyboard to exit
-	if key & 0xFF == ord('q'):
+	# Press q to exit
+	if key == ord('q'):
 		break
-
+	# Press b to start test
 	if key == ord('b'):
 		is_detect = not is_detect
 
 
 cv2.destroyAllWindows()
+

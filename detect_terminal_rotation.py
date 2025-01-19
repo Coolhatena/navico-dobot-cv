@@ -12,6 +12,7 @@ roi_center = (int(roi[0][0] + (roi[1][0] - roi[0][0])/2), int(roi[0][1] + (roi[1
 template = cv2.imread('template_camera.png')
 is_detect = False
 q_unicode = ord('q')
+b_unicode = ord('b')
 
 while(cap.isOpened()):
 	ret, frame = cap.read()
@@ -64,10 +65,10 @@ while(cap.isOpened()):
 	
 	key = cv2.waitKey(25)
 	# Press q to exit
-	if key == ord('q'):
+	if key == q_unicode:
 		break
 	# Press b to start test
-	if key == ord('b'):
+	if key == b_unicode:
 		is_detect = not is_detect
 
 

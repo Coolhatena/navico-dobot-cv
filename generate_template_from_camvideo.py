@@ -11,6 +11,7 @@ while not cam.isOpened():
 	sleep(0.05)
 
 q_unicode = ord('q')
+b_unicode = ord('b')
 roi = ((230, 170), (360, 270))
 
 while True:
@@ -41,7 +42,7 @@ while True:
 	if key == q_unicode: # If 'q' is pressed, close program (Its case sensitive)
 		break
 
-	if key == ord('b'): # If 'b' is pressed, save template (Its case sensitive)
+	if key == b_unicode: # If 'b' is pressed, save template (Its case sensitive)
 		cv2.imwrite('template0.png', threshF)
 
 cv2.destroyAllWindows()

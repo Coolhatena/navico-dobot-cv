@@ -1,4 +1,3 @@
-""" A template script for computer vision projects """
 import cv2
 from time import sleep
 import numpy as np
@@ -11,10 +10,7 @@ while not cam.isOpened():
 	print("Waiting for camera...")
 	sleep(0.05)
 
-# frame = cv2.imread('img0.png')
-
 q_unicode = ord('q')
-
 roi = ((230, 170), (360, 270))
 
 while True:
@@ -31,10 +27,8 @@ while True:
 	
 	img_erosion = cv2.erode(filtered, kernel_erode, iterations=1) 
 	cv2.imshow('Frame eroded', img_erosion)
-	img_dilation = cv2.dilate(img_erosion, kernel, iterations=1)
-	cv2.imshow('Frame dilated', img_dilation)
 
-	grayF = cv2.cvtColor(img_erosion, cv2.COLOR_BGR2GRAY)# Load image, grayscale, Gaussian blur, Otsu's threshold
+	grayF = cv2.cvtColor(img_erosion, cv2.COLOR_BGR2GRAY)
 	blurF = cv2.GaussianBlur(grayF, (3,3), 0)
 	threshF = cv2.threshold(blurF, 0, 255, cv2.THRESH_BINARY)[1]
 	
@@ -47,7 +41,8 @@ while True:
 	if key == q_unicode: # If 'q' is pressed, close program (Its case sensitive)
 		break
 
-	if key == ord('b'):
+	if key == ord('b'): # If 'b' is pressed, save template (Its case sensitive)
 		cv2.imwrite('template0.png', threshF)
 
 cv2.destroyAllWindows()
+

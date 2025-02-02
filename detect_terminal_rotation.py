@@ -11,6 +11,7 @@ roi = ((220, 160), (370, 270))
 roi_center = (int(roi[0][0] + (roi[1][0] - roi[0][0])/2), int(roi[0][1] + (roi[1][1] - roi[0][1])/2))
 template = cv2.imread('template_camera.png')
 is_detect = False
+
 q_unicode = ord('q')
 b_unicode = ord('b')
 

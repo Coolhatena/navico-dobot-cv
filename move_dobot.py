@@ -34,4 +34,3 @@ send_command(f"MovJ({right_point[0]},{right_point[1]},{right_point[2]},{right_po
 send_command(f"MovJ({engaged_point[0]},{engaged_point[1]},{engaged_point[2]},{engaged_point[3]},SpeedJ={speed_fast},AccJ={acc_fast})")
 send_command(f"MovJ({start_point[0]},{start_point[1]},{start_point[2]},{start_point[3]},SpeedJ={speed_fast},AccJ={acc_fast})")
 
-send_command("DisableRobot()", port=29999)

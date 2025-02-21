@@ -16,8 +16,8 @@ send_command("EnableRobot()", port=29999)
 initial_pose = (157, -123, 213, 245)
 start_point = (157, -123, 213, 245)
 engaged_point = (157, -123, 184, 245)
-left_point = (157, -138, 184, 245)
-right_point = (157, -113, 184, 245)
+left_point = (157, -143, 184, 245)
+right_point = (157, -103, 184, 245)
 
 # Define the options
 speed_fast = 5

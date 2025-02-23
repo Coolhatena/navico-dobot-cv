@@ -42,7 +42,7 @@ def calculate_offset(limit_1, limit_2, coord_value):
 
 
 def in_center_area(point):
-	center_area = ((278, 372), (306, 394))
+	center_area = ((265, 349), (312, 375))
 	offset_x = calculate_offset(center_area[0][0], center_area[1][0], point[0])
 	offset_y = calculate_offset(center_area[0][1], center_area[1][1], point[1])
 	# print(f'Offset in x: {offset_x}')
@@ -55,11 +55,10 @@ def in_center_area(point):
 
 send_command("ClearError()", port=29999)
 send_command("EnableRobot()", port=29999)
-	
-# time.sleep(5)
-# send_command("DisableRobot()", port=29999)
 
 start = time.time()
+
+detection = True
 
 while True:
 	# Calculate interval between commands
@@ -83,10 +82,7 @@ while True:
 	
 	cv2.imshow('filtered', filtered_grey)
 
-	
-	
 	if contours:
-
 		c = max(contours, key = cv2.contourArea)
 		M = cv2.moments(c)
 		if not (M['m00'] != 0):
@@ -108,16 +104,8 @@ while True:
 
 		corrected_approx = []
 		for point in approx:
-			# print("Original:")
-			# print(point[0])
-			# # corrected_approx.append()
-			# print(type(point[0][0]))
-			# print(type(point[0][0] + area[0][0]))
-			# print("Corrected:")
 			new_point = [ int(point[0][0] + area[0][0]), int(point[0][1] + area[0][1]) ]
-			# print(new_point)
 			corrected_approx.append(new_point)
-			# corrected_box.append([int(pt[0]+correction_x), int(pt[1]+correction_y)])
 
 		corrected_approx = np.array(corrected_approx)
 		# Draw the approximated polygon
@@ -134,6 +122,7 @@ while True:
 			print(f'The robot has to move {movement_x} in x and {movement_y} in y')
 
 			if movement_x or movement_y:
+			# if False:
 				# Define the options
 				print('MOVING')
 				speed_slow = 1

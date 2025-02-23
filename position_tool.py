@@ -1,6 +1,10 @@
 import cv2
 import numpy as np
-from time import sleep
+import time
+import math
+
+
+from send_command import send_command
 
 def click_event(event, x, y, flags, params):
    if event == cv2.EVENT_LBUTTONDOWN:
@@ -13,13 +17,13 @@ cv2.namedWindow('Frame')
 # bind the callback function to window
 cv2.setMouseCallback('Frame', click_event)
 
-camera_index = 0
-cam = cv2.VideoCapture(camera_index + cv2.CAP_DSHOW)
+camera_index = 2
+cam = cv2.VideoCapture(camera_index)
 
 while not cam.isOpened():
-	cam = cv2.VideoCapture(camera_index + cv2.CAP_DSHOW)
+	cam = cv2.VideoCapture(camera_index)
 	print("Waiting for camera...")
-	sleep(0.05)
+	time.sleep(0.05)
 
 q_unicode = ord('q')
 
@@ -36,20 +40,32 @@ def calculate_offset(limit_1, limit_2, coord_value):
 
 	return offset
 
+
 def in_center_area(point):
 	center_area = ((278, 372), (306, 394))
 	offset_x = calculate_offset(center_area[0][0], center_area[1][0], point[0])
 	offset_y = calculate_offset(center_area[0][1], center_area[1][1], point[1])
-	print(f'Offset in x: {offset_x}')
-	print(f'Offset in y: {offset_y}')
+	# print(f'Offset in x: {offset_x}')
+	# print(f'Offset in y: {offset_y}')
+	# print('\n')
 	is_in_center = (offset_x == 0) and (offset_y == 0)
 	return [is_in_center, [offset_x, offset_y]]
 
 
 
+send_command("ClearError()", port=29999)
+send_command("EnableRobot()", port=29999)
+	
+# time.sleep(5)
+# send_command("DisableRobot()", port=29999)
 
+start = time.time()
 
 while True:
+	# Calculate interval between commands
+	elapsed_time = time.time() - start
+	# print(elapsed_time)
+
 	_, frame = cam.read()
 
 	crop = frame[area[0][1]:area[1][1], area[0][0]:area[1][0]]
@@ -66,6 +82,8 @@ while True:
 	contours, _ = cv2.findContours(threshF, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 	
 	cv2.imshow('filtered', filtered_grey)
+
+	
 	
 	if contours:
 
@@ -105,11 +123,30 @@ while True:
 		# Draw the approximated polygon
 		cv2.drawContours(frame, [corrected_approx], 0, (0, 255, 0), 2)
 
+		if elapsed_time > 2:
+			dec_places = 2
+			print(offsets)
+			print(f'Offset in x: {offsets[0]}')
+			print(f'Offset in y: {offsets[1]}')
+			movement_x = round(offsets[0] / 10, dec_places)
+			movement_y = round(offsets[1] / 10, dec_places)
+
+			print(f'The robot has to move {movement_x} in x and {movement_y} in y')
+
+			if movement_x or movement_y:
+				# Define the options
+				print('MOVING')
+				speed_slow = 1
+				acc_slow = 1
+				send_command(f"RelMovJUser({movement_y}, {movement_x}, 0, 0, SpeedJ={speed_slow},AccJ={acc_slow})")
+
+			print('\n')
+			start = time.time()
+
 
 	height_frame, width_frame, _ = frame.shape
 	cv2.circle(frame, ( width_frame//2, height_frame//2 ), 3, (0, 255, 0), -1)
 	cv2.imshow('Frame', frame)
-
 
 	key = cv2.waitKey(1)
 	if key == q_unicode: # If 'q' is pressed, close program (Its case sensitive)

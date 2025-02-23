@@ -1,4 +1,4 @@
-from send_command import send_command
+from tcp_dobot import send_command
 
 import time
 

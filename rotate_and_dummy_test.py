@@ -1,6 +1,6 @@
 from dummy_test import dummy_test
 from rotate_tool import rotate_tool
-from send_command import send_command
+from tcp_dobot import send_command
 
 import time
 

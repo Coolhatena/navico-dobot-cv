@@ -4,7 +4,7 @@ import time
 import math
 
 
-from send_command import send_command
+from tcp_dobot import send_command
 
 def click_event(event, x, y, flags, params):
    if event == cv2.EVENT_LBUTTONDOWN:

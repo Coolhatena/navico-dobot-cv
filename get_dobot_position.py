@@ -1,4 +1,4 @@
-from send_command_with_response import send_command_with_response
+from tcp_dobot import send_command_with_response
 
 def get_dobot_position():
 	response = send_command_with_response(f"GetPose()")

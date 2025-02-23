@@ -1,4 +1,4 @@
-from send_command import send_command
+from tcp_dobot import send_command
 from get_dobot_position import get_dobot_position
 
 def rotate_tool():

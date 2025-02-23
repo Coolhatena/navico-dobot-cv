@@ -35,8 +35,14 @@ def calculate_offset(limit_1, limit_2, coord_value):
 	if coord_value - limit_1 < 0:
 		offset = coord_value - limit_1
 
+	# if coord_value - limit_1 == 0:
+	# 	offset = -1
+
 	if coord_value - limit_2 > 0:
 		offset = coord_value - limit_2
+
+	# if coord_value - limit_2 == 0:
+	# 	offset = 1
 
 	return offset
 
@@ -70,6 +76,10 @@ while True:
 	if detection:
 		crop = frame[area[0][1]:area[1][1], area[0][0]:area[1][0]]
 		cv2.rectangle(frame, area[0], area[1], (255, 0 , 0), 2)
+
+		# debug draw terminal center area
+		center_area = ((265, 349), (312, 375))
+		cv2.rectangle(frame, center_area[0], center_area[1], (255, 0 , 0), 2)
 
 		hsv = cv2.cvtColor(crop, cv2.COLOR_BGR2HSV)
 		msk = cv2.inRange(hsv, np.array([0, 0, 85]), np.array([28, 255, 255]))
@@ -122,8 +132,8 @@ while True:
 
 				print(f'The robot has to move {movement_x} in x and {movement_y} in y')
 
-				if movement_x or movement_y:
-				# if False:
+				# if movement_x or movement_y:
+				if False:
 					# Define the options
 					print('MOVING')
 					speed_slow = 1

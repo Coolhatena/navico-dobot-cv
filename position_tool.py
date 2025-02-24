@@ -138,7 +138,15 @@ while True:
 					print('MOVING')
 					speed_slow = 1
 					acc_slow = 1
-					send_command(f"RelMovJUser({movement_y}, {movement_x}, 0, 0, SpeedJ={speed_slow},AccJ={acc_slow})")
+					
+					fixed_added_movement = 0.5
+					multiplier_x = 1 if movement_x > 0 else -1
+					multiplier_y = 1 if movement_y > 0 else -1
+
+					fix_x = fixed_added_movement + multiplier_x
+					fix_y = fixed_added_movement + multiplier_y
+
+					send_command(f"RelMovJUser({movement_y + fix_y}, {movement_x + fix_x}, 0, 0, SpeedJ={speed_slow},AccJ={acc_slow})")
 
 				print('\n')
 				start = time.time()

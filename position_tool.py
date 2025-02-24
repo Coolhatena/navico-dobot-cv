@@ -54,7 +54,7 @@ def in_center_area(point):
 	# print(f'Offset in x: {offset_x}')
 	# print(f'Offset in y: {offset_y}')
 	# print('\n')
-	is_in_center = (offset_x == 0) and (offset_y == 0)
+	is_in_center = not offset_x and not offset_y
 	return [is_in_center, [offset_x, offset_y]]
 
 
@@ -132,8 +132,8 @@ while True:
 
 				print(f'The robot has to move {movement_x} in x and {movement_y} in y')
 
-				# if movement_x or movement_y:
-				if False:
+				if not is_in_center_area:
+				# if False:
 					# Define the options
 					print('MOVING')
 					speed_slow = 1

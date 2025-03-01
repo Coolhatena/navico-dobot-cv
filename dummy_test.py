@@ -4,8 +4,8 @@ import time
 
 def dummy_test():
 	# Define the options
-	speed_slow = 1
-	acc_slow = 1
+	speed_slow = 2
+	acc_slow = 2
 
 	test_movement = 10
 

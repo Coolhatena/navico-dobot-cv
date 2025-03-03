@@ -7,7 +7,7 @@ def dummy_test():
 	speed_slow = 2
 	acc_slow = 2
 
-	test_movement = 10
+	test_movement = 9
 
 	send_command(f"RelMovJUser(0, 0, -{test_movement}, 0, SpeedJ={speed_slow},AccJ={acc_slow})")
 	time.sleep(1)

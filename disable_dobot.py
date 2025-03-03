@@ -1,5 +1,3 @@
-import socket
-
 from tcp_dobot import send_command
 
 send_command("ClearError()", port=29999)

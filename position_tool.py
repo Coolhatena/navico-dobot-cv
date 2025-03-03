@@ -28,7 +28,7 @@ while not cam.isOpened():
 q_unicode = ord('q')
 
 
-area = ((230,310), (350, 440))
+area = ((300, 260), (400, 360))
 
 def calculate_offset(limit_1, limit_2, coord_value):
 	offset = 0
@@ -48,7 +48,7 @@ def calculate_offset(limit_1, limit_2, coord_value):
 
 
 def in_center_area(point):
-	center_area = ((265, 349), (312, 375))
+	center_area = ((335, 290), (362, 299))
 	offset_x = calculate_offset(center_area[0][0], center_area[1][0], point[0])
 	offset_y = calculate_offset(center_area[0][1], center_area[1][1], point[1])
 	# print(f'Offset in x: {offset_x}')
@@ -64,7 +64,7 @@ send_command("EnableRobot()", port=29999)
 
 start = time.time()
 
-detection = True
+detection = False
 
 while True:
 	# Calculate interval between commands
@@ -78,7 +78,7 @@ while True:
 		cv2.rectangle(frame, area[0], area[1], (255, 0 , 0), 2)
 
 		# debug draw terminal center area
-		center_area = ((265, 349), (312, 375))
+		center_area = ((335, 290), (362, 299))
 		cv2.rectangle(frame, center_area[0], center_area[1], (255, 0 , 0), 2)
 
 		hsv = cv2.cvtColor(crop, cv2.COLOR_BGR2HSV)

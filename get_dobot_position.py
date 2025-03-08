@@ -5,7 +5,7 @@ def get_dobot_position():
 	start = response.index("{") + 1
 	end = response.index("}")
 	splitted_data = response[start:end].split(',')
-	position = [float(splitted_data[0]), float(splitted_data[1]), float(splitted_data[2]), float(splitted_data[3])]
+	position = (float(splitted_data[0]), float(splitted_data[1]), float(splitted_data[2]), float(splitted_data[3]))
 
 	return position
 

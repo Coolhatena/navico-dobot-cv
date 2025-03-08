@@ -1,5 +1,6 @@
 from tcp_dobot import send_command
 from get_dobot_position import get_dobot_position
+from move_dobot_to import moveDobotToRelative
 
 def rotate_tool():
 	speed_slow = 1
@@ -10,7 +11,8 @@ def rotate_tool():
 	tool_angle = positions[3]
 
 	rotation = -180 if tool_angle > -200 else 180
-	send_command(f"RelMovJUser(0, 0, 0, {rotation}, SpeedJ={speed_slow},AccJ={acc_slow})")
+	moveDobotToRelative((0, 0, 0, rotation), speed_slow, acc_slow)
+	print(f"TOOL ROTATED\n\n")
 
 if __name__ == "__main__":
 	rotate_tool()

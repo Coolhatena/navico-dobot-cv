@@ -6,6 +6,7 @@ import math
 from tcp_dobot import send_command
 from rotate_tool import rotate_tool
 from dummy_test import dummy_test
+from move_dobot_to import moveDobotToRelative
 
 
 def calculate_offset(limit_1, limit_2, coord_value):
@@ -38,10 +39,10 @@ def in_center_area(point):
 
 def position_tool_and_test():
 	rotate_tool()
-	time.sleep(5)
 
 	cv2.namedWindow('Frame')
 
+	# DEBUG: Could be 0 if the system does not have another camera
 	camera_index = 2
 	cam = cv2.VideoCapture(camera_index)
 
@@ -136,8 +137,7 @@ def position_tool_and_test():
 
 					fix_x = fixed_added_movement + multiplier_x
 					fix_y = fixed_added_movement + multiplier_y
-
-					send_command(f"RelMovJUser({movement_y + fix_y}, {movement_x + fix_x}, 0, 0, SpeedJ={speed_slow},AccJ={acc_slow})")
+					moveDobotToRelative((movement_y + fix_y, movement_x + fix_x, 0, 0), speed_slow, acc_slow)
 
 				print('\n')
 				start = time.time()
@@ -155,7 +155,6 @@ def position_tool_and_test():
 			break
 
 	rotate_tool()
-	time.sleep(2)
 	dummy_test()
 	cam.release()
 	cv2.destroyAllWindows()

@@ -35,6 +35,7 @@ def moveDobotToRelative(point, speed=1, acc=1, port=30003):
 
 	print(f'MOVEMENT TO {point} DONE\n\n') 
 
+
 if __name__ == "__main__":
 	send_command("ClearError()", port=29999)
 	send_command("EnableRobot()", port=29999)

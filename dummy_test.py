@@ -1,6 +1,3 @@
-import time
-
-from tcp_dobot import send_command
 from move_dobot_to import moveDobotToRelative
 
 def dummy_test():

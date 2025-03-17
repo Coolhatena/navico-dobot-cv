@@ -1,6 +1,5 @@
 import time
 
-from tcp_dobot import send_command
 from prod_position_tool import position_tool_and_test
 from get_dobot_position import get_dobot_position
 from move_dobot_to import moveDobotTo, moveDobotToRelative
@@ -14,7 +13,7 @@ def test_row(row):
 
 	terminal_index = 0
 
-	while(terminal_index < 3):
+	while(terminal_index < 15):
 		original_position = get_dobot_position()
 		position_tool_and_test()
 

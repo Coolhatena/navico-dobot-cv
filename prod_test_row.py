@@ -1,5 +1,3 @@
-import time
-
 from prod_position_tool import position_tool_and_test
 from get_dobot_position import get_dobot_position
 from move_dobot_to import moveDobotTo, moveDobotToRelative

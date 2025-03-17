@@ -1,9 +1,7 @@
 import cv2
 import numpy as np
 import time
-import math
 
-from tcp_dobot import send_command
 from rotate_tool import rotate_tool
 from dummy_test import dummy_test
 from move_dobot_to import moveDobotToRelative

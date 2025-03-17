@@ -7,6 +7,7 @@ from get_dobot_position import get_dobot_position
 def _compare_positions(position1, position2, max_difference=0.5):
 	return all(abs(x - y) < max_difference for x, y in zip(position1, position2))
 
+
 def moveDobotTo(point, speed=1, acc=1, port=30003):
 	x, y, z, r = point
 	command = "MovJ({}, {}, {}, {}, SpeedJ={}, AccJ={})".format(x, y, z, r, speed, acc)

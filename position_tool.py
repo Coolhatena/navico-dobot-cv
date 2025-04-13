@@ -2,8 +2,9 @@ import cv2
 import numpy as np
 import time
 
-
 from tcp_dobot import send_command
+from move_dobot_to import moveDobotToRelative
+
 
 def click_event(event, x, y, flags, params):
    if event == cv2.EVENT_LBUTTONDOWN:
@@ -61,18 +62,33 @@ def in_center_area(point):
 send_command("ClearError()", port=29999)
 send_command("EnableRobot()", port=29999)
 
-start = time.time()
+cv2.namedWindow('Frame')
 
-detection = False
+# DEBUG: Could be 0 if the system does not have another camera
+camera_index = 2
+cam = cv2.VideoCapture(camera_index)
+
+while not cam.isOpened():
+	cam = cv2.VideoCapture(camera_index)
+	print("Waiting for camera...")
+	time.sleep(0.05)
+
+q_unicode = ord('q')
+
+
+area = ((300, 260), (400, 360))
+start = time.time()
+is_test_active = False
+is_successfull_positioning = False
 
 while True:
-	# Calculate interval between commands
-	elapsed_time = time.time() - start
-	# print(elapsed_time)
-
 	_, frame = cam.read()
 
-	if detection:
+	if is_test_active:
+		# Calculate interval between commands
+		elapsed_time = time.time() - start
+		# print(elapsed_time)
+
 		crop = frame[area[0][1]:area[1][1], area[0][0]:area[1][0]]
 		cv2.rectangle(frame, area[0], area[1], (255, 0 , 0), 2)
 
@@ -121,7 +137,7 @@ while True:
 			# Draw the approximated polygon
 			cv2.drawContours(frame, [corrected_approx], 0, (0, 255, 0), 2)
 
-			if elapsed_time > 2:
+			if elapsed_time > 0.8:
 				dec_places = 2
 				print(offsets)
 				print(f'Offset in x: {offsets[0]}')
@@ -131,9 +147,10 @@ while True:
 
 				print(f'The robot has to move {movement_x} in x and {movement_y} in y')
 
-				if not is_in_center_area:
-				# if False:
-					# Define the options
+				if is_in_center_area:
+					is_successfull_positioning = True
+					print('STOP MOVING')
+				else:
 					print('MOVING')
 					speed_slow = 1
 					acc_slow = 1
@@ -144,8 +161,7 @@ while True:
 
 					fix_x = fixed_added_movement + multiplier_x
 					fix_y = fixed_added_movement + multiplier_y
-
-					send_command(f"RelMovJUser({movement_y + fix_y}, {movement_x + fix_x}, 0, 0, SpeedJ={speed_slow},AccJ={acc_slow})")
+					moveDobotToRelative((movement_y + fix_y, movement_x + fix_x, 0, 0), speed_slow, acc_slow)
 
 				print('\n')
 				start = time.time()
@@ -160,7 +176,10 @@ while True:
 		break
 
 	if key == ord('b'):
-		detection = not detection
+		is_test_active = not is_test_active
+
+	if is_successfull_positioning:
+		...
 
 cam.release()
 cv2.destroyAllWindows()

@@ -1,7 +1,7 @@
 from tcp_dobot import send_command
 from prod_test_row import test_row
 
-TODO: Add integration for torquemeter detection
+# TODO: Add integration for torquemeter detection
 
 # Clear errors and enable the robot
 send_command("ClearError()", port=29999)

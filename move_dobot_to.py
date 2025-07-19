@@ -40,10 +40,10 @@ if __name__ == "__main__":
 	send_command("ClearError()", port=29999)
 	send_command("EnableRobot()", port=29999)
 
-	moveDobotTo((195, -92, 202, -124), 5, 5)
-	moveDobotTo((208, -92, 202, -124), 5, 5)
+	# moveDobotTo((195, -92, 202, -124), 5, 5)
+	# moveDobotTo((208, -92, 202, -124), 5, 5)
 
-	moveDobotToRelative((0, 30, 0, 0), 2, 2)
-	moveDobotToRelative((0, -30, 0, 0), 2, 2)
+	moveDobotToRelative((0, 0, 0,2), 2, 2)
+	# moveDobotToRelative((0, -30, 0, 0), 2, 2)
 
 	send_command("disableRobot()", port=29999)

@@ -1,4 +1,6 @@
 import tkinter as tk
+import os
+import json
 from tcp_dobot import send_command
 from get_dobot_position import get_dobot_position
 from move_dobot_to import moveDobotTo
@@ -6,49 +8,80 @@ from move_dobot_to import moveDobotTo
 class ControlApp:
 	def __init__(self, root):
 		self.root = root
-		self.root.title("Control de Coordenadas")
+		self.root.title("Coordinate Control")
 
-		# Coordenadas y step inicial
+		# Coordinates and initial step
 		self.coords = {'x': 0, 'y': 0, 'z': 0, 'r': 0}
 		self.step = 1.0
 
-		# Etiqueta de coordenadas
-		self.label = tk.Label(root, text=self.get_coord_text(), font=("Arial", 14))
+		# Create left-side frame for save buttons
+		left_frame = tk.Frame(root)
+		left_frame.pack(side=tk.LEFT, padx=10, pady=10)
+
+		tk.Button(left_frame, text="Save Start Point", command=lambda: self.save_point("start")).pack(pady=5)
+		tk.Button(left_frame, text="Save End Point", command=lambda: self.save_point("end")).pack(pady=5)
+
+		# Main UI frame
+		main_frame = tk.Frame(root)
+		main_frame.pack(side=tk.LEFT, padx=20)
+
+		self.label = tk.Label(main_frame, text=self.get_coord_text(), font=("Arial", 14))
 		self.label.pack(pady=10)
 
-		# Grupo 1: Control de x, y
-		frame1 = tk.Frame(root)
+		# Group 1: X and Y controls
+		frame1 = tk.Frame(main_frame)
 		frame1.pack(pady=10)
-		self.create_cruceta(frame1, "+x", "-x", "+y", "-y", self.update_xy)
+		self.create_dpad(frame1, "+x", "-x", "+y", "-y", self.update_xy)
 
-		# Grupo 2: Control de z, r
-		frame2 = tk.Frame(root)
+		# Group 2: Z and R controls
+		frame2 = tk.Frame(main_frame)
 		frame2.pack(pady=10)
-		self.create_cruceta(frame2, "+z", "-z", "+r", "-r", self.update_zr)
+		self.create_dpad(frame2, "+z", "-z", "+r", "-r", self.update_zr)
 
-		# Selector de step
-		step_frame = tk.Frame(root)
+		# Step size selector
+		step_frame = tk.Frame(main_frame)
 		step_frame.pack(pady=10)
-		tk.Label(step_frame, text="Step actual:").pack(side=tk.LEFT)
+		tk.Label(step_frame, text="Current step:").pack(side=tk.LEFT)
 
 		for val in [0.1, 1, 5, 10]:
 			tk.Button(step_frame, text=str(val), width=4, command=lambda v=val: self.set_step(v)).pack(side=tk.LEFT, padx=2)
-			
-				# Switch Activado/Desactivado
-		switch_frame = tk.Frame(root)
+
+		# Robot mode switch
+		switch_frame = tk.Frame(main_frame)
 		switch_frame.pack(pady=10)
 
 		self.switch_var = tk.IntVar()
-		self.status_label = tk.Label(switch_frame, text="Desactivado", bg="red", fg="white", width=12)
+		self.status_label = tk.Label(switch_frame, text="Disabled", bg="red", fg="white", width=12)
 
 		self.switch = tk.Checkbutton(
 			switch_frame,
-			text="Modo",
+			text="Mode",
 			variable=self.switch_var,
 			command=self.toggle_switch
 		)
 		self.switch.pack(side=tk.LEFT, padx=5)
 		self.status_label.pack(side=tk.LEFT)
+
+	def save_point(self, point_type):
+		file_path = "config.json"
+		if not os.path.exists(file_path):
+			data = {"start": {}, "end": {}}
+		else:
+			with open(file_path, "r") as f:
+				data = json.load(f)
+
+		# Save current coordinates to selected point
+		data[point_type] = {
+			"x": self.coords['x'],
+			"y": self.coords['y'],
+			"z": self.coords['z'],
+			"r": self.coords['r']
+		}
+
+		with open(file_path, "w") as f:
+			json.dump(data, f, indent=4)
+
+		print(f"{point_type.capitalize()} point saved: {data[point_type]}")
 
 
 	def toggle_switch(self):
@@ -116,7 +149,7 @@ class ControlApp:
 		self.update_label()
 
 
-	def create_cruceta(self, frame, up, down, left, right, callback):
+	def create_dpad(self, frame, up, down, left, right, callback):
 		# Distribución de botones en forma de cruceta
 		tk.Button(frame, text=up, width=8, command=lambda: callback(up)).grid(row=0, column=1)
 		tk.Button(frame, text=left, width=8, command=lambda: callback(left)).grid(row=1, column=0)

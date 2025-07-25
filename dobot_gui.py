@@ -25,6 +25,20 @@ class ControlApp:
 		main_frame = tk.Frame(root)
 		main_frame.pack(side=tk.LEFT, padx=20)
 
+		# Right-side frame for velocity and acceleration
+		self.velocity = tk.IntVar(value=5)
+		self.acceleration = tk.IntVar(value=5)
+
+		right_frame = tk.Frame(root)
+		right_frame.pack(side=tk.RIGHT, padx=10, pady=10)
+
+		tk.Label(right_frame, text="Velocidad:", anchor="w").pack()
+		tk.Entry(right_frame, textvariable=self.velocity, width=8).pack(pady=5)
+
+		tk.Label(right_frame, text="Aceleración:", anchor="w").pack()
+		tk.Entry(right_frame, textvariable=self.acceleration, width=8).pack(pady=5)
+
+
 		self.label = tk.Label(main_frame, text=self.get_coord_text(), font=("Arial", 14))
 		self.label.pack(pady=10)
 
@@ -131,7 +145,7 @@ class ControlApp:
 		elif direction == "-y":
 			self.coords['y'] = round(self.coords['y'] - self.step, 3)
 			
-		moveDobotTo([self.coords['x'], self.coords['y'], self.coords['z'], self.coords['r']])
+		self.moveToCoords()
 		self.update_label()
 
 
@@ -145,8 +159,13 @@ class ControlApp:
 		elif direction == "-r":
 			self.coords['r'] = round(self.coords['r'] - self.step, 3)
 			
-		moveDobotTo([self.coords['x'], self.coords['y'], self.coords['z'], self.coords['r']])
+		self.moveToCoords()
 		self.update_label()
+
+	def moveToCoords(self):
+		# print(type(self.velocity.get()))
+		# print(type(self.acceleration.get()))
+		moveDobotTo([self.coords['x'], self.coords['y'], self.coords['z'], self.coords['r']], self.velocity.get(), self.acceleration.get())
 
 
 	def create_dpad(self, frame, up, down, left, right, callback):

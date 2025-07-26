@@ -1,7 +1,15 @@
+import os
+import json
 from tcp_dobot import send_command
 from prod_test_row import test_row
 
 # TODO: Add integration for torquemeter detection
+
+file_path = "config.json"
+with open(file_path, "r") as f:
+	data = json.load(f)
+	initial_coords = (data["start"]['x'], data["start"]['y'], data["start"]['z'], data["start"]['r'])
+	print(data["start"])
 
 # Clear errors and enable the robot
 send_command("ClearError()", port=29999)
@@ -9,7 +17,9 @@ send_command("EnableRobot()", port=29999)
 
 # Define the positions
 # (X, Y, Z, R)
-row1 = (195, -92, 202, -124)
+
+# row1 = (195, -92, 202, -124)
+row1 = initial_coords
 row2 = (208, -92, 202, -124)
 row3 = (219, -92, 202, -124)
 

@@ -1,5 +1,6 @@
 from tcp_dobot import send_command
 from get_dobot_position import get_dobot_position
+from set_arm_orientation import setArmOrientation
 
 
 # Position need to be compared this way because there may be a slight difference 
@@ -10,6 +11,7 @@ def _compare_positions(position1, position2, max_difference=0.5):
 
 def moveDobotTo(point, speed=1, acc=1, port=30003):
 	x, y, z, r = point
+	setArmOrientation(y)
 	command = "MovJ({}, {}, {}, {}, SpeedJ={}, AccJ={})".format(x, y, z, r, speed, acc)
 	send_command(command, port)
 
@@ -22,6 +24,8 @@ def moveDobotToRelative(point, speed=1, acc=1, port=30003):
 	original_position = get_dobot_position()
 	x, y, z, r = point
 	new_position = (original_position[0] + x, original_position[1] + y, original_position[2] + z, original_position[3] + r)
+
+	setArmOrientation(new_position[1])
 
 	command = "RelMovJUser({}, {}, {}, {}, SpeedJ={}, AccJ={})".format(x, y, z, r, speed, acc)
 	send_command(command, port)

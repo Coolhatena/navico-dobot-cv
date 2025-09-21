@@ -40,3 +40,33 @@ def modular_test_row(row, down_movement, side_movement):
 		print(f"Terminal index: {terminal_index}")
 	
 
+def modular_test_row_between(start_pt, end_pt, n, down_movement, side_movement, speed=5, acc=5):
+	# start_pt/end_pt: (x, y, z, r)
+	# n: number of terminals (>=1)
+	if n < 1:
+		raise ValueError("n debe ser >= 1")
+
+	def lerp(a, b, t):
+		return a + (b - a) * t
+
+	def point_at(t):
+		return (
+			lerp(float(start_pt[0]), float(end_pt[0]), t),
+			lerp(float(start_pt[1]), float(end_pt[1]), t),
+			lerp(float(start_pt[2]), float(end_pt[2]), t),
+			lerp(float(start_pt[3]), float(end_pt[3]), t),
+		)
+
+	# caso n == 1: solo inicio
+	ts = [0.0] if n == 1 else [i / (n - 1) for i in range(n)]
+
+	for idx, t in enumerate(ts, start=1):
+		target = point_at(t)
+		moveDobotTo(target, speed, acc)
+
+		original_position = get_dobot_position()
+		modular_full_dummy_test(down_movement, side_movement)
+		moveDobotTo(original_position, speed, acc)
+
+		print(f"Terminal index: {idx}/{n}")
+

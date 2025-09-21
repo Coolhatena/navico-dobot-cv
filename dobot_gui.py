@@ -7,7 +7,7 @@ from tcp_dobot import send_command
 from get_dobot_position import get_dobot_position
 from move_dobot_to import moveDobotTo
 from dummy_test import modular_full_dummy_test
-from prod_test_row import modular_test_row
+from prod_test_row import modular_test_row_between  # cambio: usar nueva función
 
 CONFIG_PATH = "config.json"
 
@@ -62,8 +62,9 @@ class ControlApp:
 		left_frame = tk.Frame(container)
 		left_frame.grid(row=1, column=0, sticky="n", padx=20, pady=20)
 
-		self.down_movement_var = tk.DoubleVar(value=10.0)
-		self.side_movement_var = tk.DoubleVar(value=20.0)
+		self.down_movement_var = tk.DoubleVar(value=15.0)
+		self.side_movement_var = tk.DoubleVar(value=25.0)
+		self.terminals_var = tk.IntVar(value=15)
 
 		tk.Label(left_frame, text="Movimiento hacia abajo:").pack(anchor="w")
 		tk.Entry(left_frame, textvariable=self.down_movement_var, width=10).pack(pady=(0, 8))
@@ -71,28 +72,28 @@ class ControlApp:
 		tk.Label(left_frame, text="Movimiento lateral:").pack(anchor="w")
 		tk.Entry(left_frame, textvariable=self.side_movement_var, width=10).pack(pady=(0, 12))
 
-		tk.Label(left_frame, text="Perfil:").pack(anchor="w")
-		profile_select = ttk.Combobox(left_frame, textvariable=self.profile_var, values=["1", "2", "3"], state="readonly", width=6)
-		profile_select.pack(pady=(0, 12))
+		tk.Label(left_frame, text="Terminales:").pack(anchor="w")
+		tk.Entry(left_frame, textvariable=self.terminals_var, width=10).pack(pady=(0, 12))
 
 		tk.Button(left_frame, text="Probar Terminal", command=self.test_terminal).pack(pady=5)
 		tk.Button(left_frame, text="Probar Fila", command=self.test_row).pack(pady=5)
+
+		tk.Label(left_frame, text="Fila:").pack(anchor="w")
+		profile_select = ttk.Combobox(left_frame, textvariable=self.profile_var, values=["1", "2", "3"], state="readonly", width=6)
+		profile_select.pack(pady=(0, 12))
 		
 		# --- Coordinates buttons ---
-		# Initial Point
 		tk.Label(left_frame, text="Punto inicial").pack(anchor="w", pady=(10, 0))
 		start_frame = tk.Frame(left_frame)
 		start_frame.pack(pady=5, anchor="w")
 		tk.Button(start_frame, text="Guardar", command=lambda: self.save_point("start")).pack(side=tk.LEFT, padx=2)
 		tk.Button(start_frame, text="Ir", command=lambda: self.goto_point("start")).pack(side=tk.LEFT, padx=2)
 
-		# Final point
 		tk.Label(left_frame, text="Punto final").pack(anchor="w", pady=(10, 0))
 		end_frame = tk.Frame(left_frame)
 		end_frame.pack(pady=5, anchor="w")
 		tk.Button(end_frame, text="Guardar", command=lambda: self.save_point("end")).pack(side=tk.LEFT, padx=2)
 		tk.Button(end_frame, text="Ir", command=lambda: self.goto_point("end")).pack(side=tk.LEFT, padx=2)
-
 
 		main_frame = tk.Frame(container)
 		main_frame.grid(row=1, column=1, sticky="n", padx=20, pady=20)
@@ -251,18 +252,41 @@ class ControlApp:
 	def test_row(self):
 		profile = self.profile_var.get()
 		data = load_config()
-		if profile not in data or "start" not in data[profile] or not data[profile]["start"]:
+		if profile not in data:
+			messagebox.showerror("Error", f"No hay datos para el perfil {profile}.")
+			return
+		if "start" not in data[profile] or not data[profile]["start"]:
 			messagebox.showerror("Error", f"No hay punto inicial guardado para el perfil {profile}.")
 			return
+		if "end" not in data[profile] or not data[profile]["end"]:
+			messagebox.showerror("Error", f"No hay punto final guardado para el perfil {profile}.")
+			return
+
 		start = data[profile]["start"]
-		initial_coords = (start.get('x', 0), start.get('y', 0), start.get('z', 0), start.get('r', 0))
+		end = data[profile]["end"]
+
+		start_coords = (start.get('x', 0), start.get('y', 0), start.get('z', 0), start.get('r', 0))
+		end_coords   = (end.get('x', 0),   end.get('y', 0),   end.get('z', 0),   end.get('r', 0))
 		try:
 			down = float(self.down_movement_var.get())
 			side = float(self.side_movement_var.get())
+			n = int(self.terminals_var.get())
 		except (ValueError, tk.TclError):
-			messagebox.showerror("Error", "Ingresa valores numéricos válidos para abajo y lateral.")
+			messagebox.showerror("Error", "Ingresa valores válidos para abajo, lateral y terminales.")
 			return
-		modular_test_row(initial_coords, down, side)
+		if n < 1:
+			messagebox.showerror("Error", "Terminales debe ser >= 1.")
+			return
+
+		modular_test_row_between(
+			start_coords,
+			end_coords,
+			n,
+			down_movement=down,
+			side_movement=side,
+			speed=self.velocity.get(),
+			acc=self.acceleration.get()
+		)
 
 if __name__ == "__main__":
 	root = tk.Tk()

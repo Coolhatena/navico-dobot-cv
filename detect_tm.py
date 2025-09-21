@@ -10,7 +10,7 @@ cam = cv2.VideoCapture(cam_index)
 
 grey_filter = [np.array([12, 0, 106]), np.array([72, 75, 211])]
 # blue_filter = [np.array([83, 150, 89]), np.array([180, 239, 255])]
-blue_filter = [np.array([114, 78, 0]), np.array([119, 255, 210])]
+blue_filter = [np.array([105, 50, 75]), np.array([119, 141, 205])]
 
 q_unicode = ord('q')
 

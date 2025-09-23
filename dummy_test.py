@@ -45,6 +45,11 @@ def modular_full_dummy_test(down_movement, side_movement):
 	# Right
 	moveDobotToRelative((0, side_movement, 0, 0), speed_slow, acc_slow)
 	moveDobotToRelative((0, -side_movement, 1, 0), speed_slow, acc_slow)
+
+	# Pressure Relief
+	moveDobotToRelative((0, 0, 3, 0), speed_slow, acc_slow)
+	moveDobotToRelative((0, 0, -3, 0), speed_slow, acc_slow)
+
 	# Left
 	moveDobotToRelative((0, -side_movement, -1, 0), speed_slow, acc_slow)
 	moveDobotToRelative((0, side_movement, 0, 0), speed_slow, acc_slow)

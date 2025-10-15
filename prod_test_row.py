@@ -41,6 +41,7 @@ def modular_test_row(row, down_movement, side_movement):
 	
 
 def modular_test_row_between(start_pt, end_pt, n, down_movement, side_movement, speed=5, acc=5, skips=None):
+	print(f"Numero de terminales: {n}")
 	# start_pt/end_pt: (x, y, z, r)
 	# n: número de terminales (>=1)
 	# skips: conjunto/lista de índices 1-basados que se deben omitir
@@ -72,6 +73,7 @@ def modular_test_row_between(start_pt, end_pt, n, down_movement, side_movement, 
 			continue
 
 		target = point_at(t)
+		# print(target)
 		moveDobotTo(target, speed, acc)
 
 		original_position = get_dobot_position()

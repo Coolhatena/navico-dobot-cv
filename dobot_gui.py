@@ -32,11 +32,9 @@ def ensure_profile(data, profile_key):
 		rows[profile_key]["skips"] = ""
 	return data
 
-
 def save_config(data):
 	with open(CONFIG_PATH, "w") as f:
 		json.dump(data, f, indent=4)
-
 
 def _parse_skips(s, n):
 	if not isinstance(s, str):
@@ -54,8 +52,6 @@ def _parse_skips(s, n):
 			pass
 	return out
 
-
-
 class ControlApp:
 	def __init__(self, root):
 		send_command("ClearError()", port=29999)
@@ -66,15 +62,13 @@ class ControlApp:
 		self.root.rowconfigure(0, weight=1)
 		self.root.columnconfigure(0, weight=1)
 
-		# Screens
 		self.nb = ttk.Notebook(self.root)
 		self.nb.grid(row=0, column=0, sticky="nsew")
-		page1 = tk.Frame(self.nb)   # Config
-		page2 = tk.Frame(self.nb)   # Test
+		page1 = tk.Frame(self.nb)
+		page2 = tk.Frame(self.nb)
 		self.nb.add(page1, text="Configuración")
 		self.nb.add(page2, text="Prueba")
 
-		# Screen 1 (Config)
 		page1.rowconfigure(0, weight=1)
 		page1.columnconfigure(0, weight=1)
 		container = tk.Frame(page1)
@@ -98,7 +92,7 @@ class ControlApp:
 
 		self.down_movement_var = tk.DoubleVar(value=15.0)
 		self.side_movement_var = tk.DoubleVar(value=25.0)
-		self.terminals_var = tk.IntVar(value=15)
+		self.terminals_var = tk.IntVar(value=16)
 		self.skips_var = tk.StringVar(value="")
 
 		tk.Label(left_frame, text="Movimiento hacia abajo:").pack(anchor="w")
@@ -109,6 +103,8 @@ class ControlApp:
 
 		tk.Label(left_frame, text="Terminales:").pack(anchor="w")
 		tk.Entry(left_frame, textvariable=self.terminals_var, width=10).pack(pady=(0, 12))
+
+		tk.Button(left_frame, text="Guardar Movimientos/Terminales", command=self.save_motion_settings).pack(pady=(0, 12))
 
 		tk.Label(left_frame, text="Skips:").pack(anchor="w")
 		tk.Entry(left_frame, textvariable=self.skips_var, width=18).pack(pady=(0, 12))
@@ -121,7 +117,6 @@ class ControlApp:
 		profile_select.pack(pady=(0, 12))
 		profile_select.bind("<<ComboboxSelected>>", self.on_profile_change)
 		
-		# Coordinates buttons
 		tk.Label(left_frame, text="Punto inicial").pack(anchor="w", pady=(10, 0))
 		start_frame = tk.Frame(left_frame)
 		start_frame.pack(pady=5, anchor="w")
@@ -145,6 +140,8 @@ class ControlApp:
 
 		tk.Label(right_frame, text="Aceleración:", anchor="w").pack()
 		tk.Entry(right_frame, textvariable=self.acceleration, width=8).pack(pady=5)
+
+		tk.Button(right_frame, text="Guardar Vel/Acel", command=self.save_speed_settings).pack(pady=(0, 12))
 
 		self.label = tk.Label(main_frame, text=self.get_coord_text(), font=("Arial", 14))
 		self.label.pack(pady=10)
@@ -179,7 +176,6 @@ class ControlApp:
 		self.switch.pack(side=tk.LEFT, padx=5)
 		self.status_label.pack(side=tk.LEFT)
 
-		# Screen 2 (Test)
 		page2.rowconfigure(0, weight=1)
 		page2.columnconfigure(0, weight=1)
 		prueba_frame = tk.Frame(page2)
@@ -189,9 +185,11 @@ class ControlApp:
 		tk.Button(prueba_frame, text="Calcular Coordenadas").pack(pady=10, padx=20)
 
 		self._load_skips_into_entry()
+		self._load_settings_into_entries()
 
 	def on_profile_change(self, _event=None):
 		self._load_skips_into_entry()
+		self._load_settings_into_entries()
 
 	def _load_skips_into_entry(self):
 		data = load_config()
@@ -202,11 +200,50 @@ class ControlApp:
 			val = rows[profile].get("skips", "")
 		self.skips_var.set(val if isinstance(val, str) else "")
 
+	def _load_settings_into_entries(self):
+		data = load_config()
+		if isinstance(data.get("down_movement"), (int, float)):
+			self.down_movement_var.set(data["down_movement"])
+		if isinstance(data.get("side_movement"), (int, float)):
+			self.side_movement_var.set(data["side_movement"])
+		if isinstance(data.get("terminals"), int):
+			self.terminals_var.set(data["terminals"])
+		if isinstance(data.get("velocity"), int):
+			self.velocity.set(data["velocity"])
+		if isinstance(data.get("acceleration"), int):
+			self.acceleration.set(data["acceleration"])
+
 	def _save_skips_from_entry(self):
 		profile = self.profile_var.get()
 		data = load_config()
 		data = ensure_profile(data, profile)
 		data["rows"][profile]["skips"] = self.skips_var.get()
+		save_config(data)
+
+	def save_motion_settings(self):
+		try:
+			down = float(self.down_movement_var.get())
+			side = float(self.side_movement_var.get())
+			n = int(self.terminals_var.get())
+		except (ValueError, tk.TclError):
+			messagebox.showerror("Error", "Ingresa valores válidos para movimientos y terminales.")
+			return
+		data = load_config()
+		data["down_movement"] = down
+		data["side_movement"] = side
+		data["terminals"] = n
+		save_config(data)
+
+	def save_speed_settings(self):
+		try:
+			vel = int(self.velocity.get())
+			acc = int(self.acceleration.get())
+		except (ValueError, tk.TclError):
+			messagebox.showerror("Error", "Ingresa valores válidos para velocidad y aceleración.")
+			return
+		data = load_config()
+		data["velocity"] = vel
+		data["acceleration"] = acc
 		save_config(data)
 
 	def save_point(self, point_type):
@@ -220,7 +257,6 @@ class ControlApp:
 			"r": self.coords['r']
 		}
 		save_config(data)
-		print(f"[Fila {profile}] {point_type.capitalize()} guardado: {data['rows'][profile][point_type]}")
 
 	def goto_point(self, point_type):
 		profile = self.profile_var.get()
@@ -247,7 +283,6 @@ class ControlApp:
 			send_command("ClearError()", port=29999)
 			send_command("EnableRobot()", port=29999)
 			position = get_dobot_position()
-			print(position)
 			self.coords['x'] = position[0]
 			self.coords['y'] = position[1]
 			self.coords['z'] = position[2]
@@ -341,10 +376,12 @@ class ControlApp:
 		start_coords = (start.get('x', 0), start.get('y', 0), start.get('z', 0), start.get('r', 0))
 		end_coords   = (end.get('x', 0),   end.get('y', 0),   end.get('z', 0),   end.get('r', 0))
 		try:
-			down = float(self.down_movement_var.get())
-			side = float(self.side_movement_var.get())
-			n = int(self.terminals_var.get())
+			down = float(data.get("down_movement", self.down_movement_var.get()))
+			side = float(data.get("side_movement", self.side_movement_var.get()))
+			n = int(data.get("terminals", self.terminals_var.get()))
 			skips_str = rows[profile].get("skips", "")
+			speed = int(data.get("velocity", self.velocity.get()))
+			acc = int(data.get("acceleration", self.acceleration.get()))
 		except (ValueError, tk.TclError):
 			messagebox.showerror("Error", "Ingresa valores válidos para abajo, lateral y terminales.")
 			return
@@ -359,13 +396,12 @@ class ControlApp:
 			n,
 			down_movement=down,
 			side_movement=side,
-			speed=self.velocity.get(),
-			acc=self.acceleration.get(),
+			speed=speed,
+			acc=acc,
 			skips=skips
 		)
 
 	def complete_test(self):
-		# placeholder
 		data = load_config()
 		print(data)
 

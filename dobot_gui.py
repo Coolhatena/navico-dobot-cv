@@ -403,7 +403,50 @@ class ControlApp:
 
 	def complete_test(self):
 		data = load_config()
-		print(data)
+		rows = data.get("rows", {})
+		if not rows:
+			messagebox.showerror("Error", "No hay filas guardadas.")
+			return
+
+		try:
+			down = float(data.get("down_movement", self.down_movement_var.get()))
+			side = float(data.get("side_movement", self.side_movement_var.get()))
+			n = int(data.get("terminals", self.terminals_var.get()))
+			speed = int(data.get("velocity", self.velocity.get()))
+			acc = int(data.get("acceleration", self.acceleration.get()))
+		except (ValueError, tk.TclError):
+			messagebox.showerror("Error", "Configuración global inválida.")
+			return
+
+		if n < 1:
+			messagebox.showerror("Error", "Terminales debe ser >= 1.")
+			return
+
+		# Recorre todas las filas guardadas
+		for key in sorted(rows.keys(), key=lambda x: int(x) if str(x).isdigit() else str(x)):
+			row = rows[key]
+			start = row.get("start", {})
+			end = row.get("end", {})
+			if not start or not end:
+				print(f"Fila {key}: faltan puntos start/end. Se omite.")
+				continue
+
+			start_coords = (start.get('x', 0), start.get('y', 0), start.get('z', 0), start.get('r', 0))
+			end_coords   = (end.get('x', 0),   end.get('y', 0),   end.get('z', 0),   end.get('r', 0))
+			skips = _parse_skips(row.get("skips", ""), n)
+
+			print(f"Iniciando prueba fila {key} con {n} terminales. Skips={sorted(skips)}")
+			modular_test_row_between(
+				start_coords,
+				end_coords,
+				n,
+				down_movement=down,
+				side_movement=side,
+				speed=speed,
+				acc=acc,
+				skips=skips
+			)
+
 
 if __name__ == "__main__":
 	root = tk.Tk()

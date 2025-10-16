@@ -46,7 +46,7 @@
             "skips": ""
         }
     },
-    "down_movement": 15.0,
+    "down_movement": 16.5,
     "side_movement": 25.0,
     "terminals": 16,
     "velocity": 25,

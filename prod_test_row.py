@@ -2,6 +2,7 @@ from prod_position_tool import position_tool_and_test
 from dummy_test import modular_full_dummy_test
 from get_dobot_position import get_dobot_position
 from move_dobot_to import moveDobotTo, moveDobotToRelative
+from prod_test_terminal import prod_test_terminal
 
 
 def test_row(row):
@@ -40,7 +41,7 @@ def modular_test_row(row, down_movement, side_movement):
 		print(f"Terminal index: {terminal_index}")
 	
 
-def modular_test_row_between(start_pt, end_pt, n, down_movement, side_movement, speed=5, acc=5, skips=None):
+def modular_test_row_between(start_pt, end_pt, n, down_movement, side_movement, cv_worker, speed=5, acc=5, skips=None):
 	print(f"Numero de terminales: {n}")
 	# start_pt/end_pt: (x, y, z, r)
 	# n: número de terminales (>=1)
@@ -77,7 +78,7 @@ def modular_test_row_between(start_pt, end_pt, n, down_movement, side_movement, 
 		moveDobotTo(target, speed, acc)
 
 		original_position = get_dobot_position()
-		modular_full_dummy_test(down_movement, side_movement)
+		prod_test_terminal(down_movement, side_movement, cv_worker)
 		moveDobotTo(original_position, speed, acc)
 
 		print(f"Terminal index: {idx}/{n}")

@@ -8,6 +8,7 @@ from get_dobot_position import get_dobot_position
 from move_dobot_to import moveDobotTo
 from dummy_test import modular_full_dummy_test
 from prod_test_row import modular_test_row_between
+from cv_worker import CVWorker
 
 CONFIG_PATH = "config.json"
 
@@ -421,6 +422,9 @@ class ControlApp:
 		if n < 1:
 			messagebox.showerror("Error", "Terminales debe ser >= 1.")
 			return
+		
+		cv_worker = CVWorker()
+		cv_worker.start()
 
 		# Recorre todas las filas guardadas
 		for key in sorted(rows.keys(), key=lambda x: int(x) if str(x).isdigit() else str(x)):
@@ -440,12 +444,15 @@ class ControlApp:
 				start_coords,
 				end_coords,
 				n,
-				down_movement=down,
-				side_movement=side,
+				down,
+				side,
+				cv_worker,
 				speed=speed,
 				acc=acc,
 				skips=skips
 			)
+
+			print(cv_worker.getTerminalResults())
 
 
 if __name__ == "__main__":

@@ -10,7 +10,7 @@ cam = cv2.VideoCapture(cam_index)
 
 grey_filter = [np.array([12, 0, 106]), np.array([72, 75, 211])]
 # blue_filter = [np.array([83, 150, 89]), np.array([180, 239, 255])]
-blue_filter = [np.array([105, 50, 75]), np.array([119, 141, 205])]
+blue_filter = [np.array([15, 114, 0]), np.array([48, 255, 255])]
 
 q_unicode = ord('q')
 
@@ -36,8 +36,8 @@ def hsv_color_filter(image, min_hsv, max_hsv):
 	return image_bw
 
 
-correction_x = 95
-correction_y = 300
+correction_x = 90
+correction_y = 150
 last_point = (95, 60)
 
 while True:
@@ -51,7 +51,7 @@ while True:
 		continue
 
 	# img_grey = hsv_color_filter(frame[0:170 , 260:390], grey_filter[0], grey_filter[1])
-	img_blue = hsv_color_filter(frame[300:600 , 95:517], blue_filter[0], blue_filter[1])
+	img_blue = hsv_color_filter(frame[150:600 , 90:517], blue_filter[0], blue_filter[1])
 
 	# # Creating kernel 
 	# kernel = np.ones((5, 5), np.uint8) 
@@ -115,7 +115,7 @@ while True:
 
 		# cv2.imshow('Frame grey', img_grey)
 		cv2.imshow('Frame blue', img_blue)
-		frame_center_x = 330 - 90 # 330 is the real center, the substract is a compensation
+		frame_center_x = 330 - 35 # 330 is the real center, the substract is a compensation
 		cv2.line(frame, (frame_center_x, 2), (frame_center_x, 170), (0, 255, 0), 2)
 
 	cv2.imshow('Frame', frame)

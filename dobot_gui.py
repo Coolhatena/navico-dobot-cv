@@ -9,6 +9,8 @@ from move_dobot_to import moveDobotTo
 from dummy_test import modular_full_dummy_test
 from prod_test_row import modular_test_row_between
 from cv_worker import CVWorker
+from dobot_status import enable_dobot, disable_dobot
+from dobot_status import is_dobot_enabled
 
 CONFIG_PATH = "config.json"
 
@@ -182,6 +184,9 @@ class ControlApp:
 		prueba_frame = tk.Frame(page2)
 		prueba_frame.grid(row=0, column=0)
 
+		self.results_canvas = tk.Canvas(prueba_frame, width=800, height=240, bg="white", highlightthickness=1, highlightbackground="#ccc")
+		self.results_canvas.pack(pady=(0, 10))
+
 		tk.Button(prueba_frame, text="Iniciar Prueba", command=lambda: self.complete_test()).pack(pady=10, padx=20)
 		tk.Button(prueba_frame, text="Calcular Coordenadas").pack(pady=10, padx=20)
 
@@ -260,6 +265,9 @@ class ControlApp:
 		save_config(data)
 
 	def goto_point(self, point_type):
+		if not self._ensure_enabled():
+			return
+	
 		profile = self.profile_var.get()
 		data = load_config()
 		rows = data.get("rows", {})
@@ -276,13 +284,19 @@ class ControlApp:
 			messagebox.showerror("Error", f"Datos inválidos en '{point_type}' de la fila {profile}.")
 			return
 		self.update_label()
-		self.moveToCoords()
+
+		try:
+			self.moveToCoords()
+		except RuntimeError as e:
+			if str(e) == "DOBOT_DISABLED":
+				messagebox.showerror("Dobot deshabilitado", "Primero activa el Dobot antes de continuar.")
+				return
+			raise
 
 	def toggle_switch(self):
 		if self.switch_var.get():
 			self.status_label.config(text="Activado", bg="green")
-			send_command("ClearError()", port=29999)
-			send_command("EnableRobot()", port=29999)
+			enable_dobot()
 			position = get_dobot_position()
 			self.coords['x'] = position[0]
 			self.coords['y'] = position[1]
@@ -291,8 +305,7 @@ class ControlApp:
 			self.update_label()
 		else:
 			self.status_label.config(text="Desactivado", bg="red")
-			send_command("ClearError()", port=29999)
-			send_command("DisableRobot()", port=29999)
+			disable_dobot()
 
 	def set_step(self, value):
 		self.step = float(value)
@@ -347,15 +360,27 @@ class ControlApp:
 		tk.Button(frame, text=down, width=8, command=lambda: callback(down)).grid(row=2, column=1)
 
 	def test_terminal(self):
+		if not self._ensure_enabled():
+			return
 		try:
 			down = float(self.down_movement_var.get())
 			side = float(self.side_movement_var.get())
 		except (ValueError, tk.TclError):
 			messagebox.showerror("Error", "Ingresa valores numéricos válidos para abajo y lateral.")
 			return
-		modular_full_dummy_test(down, side)
+		
+		try:
+			modular_full_dummy_test(down, side)
+		except RuntimeError as e:
+			if str(e) == "DOBOT_DISABLED":
+				messagebox.showerror("Dobot deshabilitado", "Primero activa el Dobot antes de continuar.")
+				return
+			raise
 
 	def test_row(self):
+		if not self._ensure_enabled():
+			return
+		
 		self._save_skips_from_entry()
 
 		profile = self.profile_var.get()
@@ -391,18 +416,28 @@ class ControlApp:
 			return
 
 		skips = _parse_skips(skips_str, n)
-		modular_test_row_between(
-			start_coords,
-			end_coords,
-			n,
-			down_movement=down,
-			side_movement=side,
-			speed=speed,
-			acc=acc,
-			skips=skips
-		)
+
+		try:
+			modular_test_row_between(
+				start_coords,
+				end_coords,
+				n,
+				down_movement=down,
+				side_movement=side,
+				speed=speed,
+				acc=acc,
+				skips=skips
+			)
+		except RuntimeError as e:
+			if str(e) == "DOBOT_DISABLED":
+				messagebox.showerror("Dobot deshabilitado", "Primero activa el Dobot antes de continuar.")
+				return
+			raise
 
 	def complete_test(self):
+		if not self._ensure_enabled():
+			return
+	
 		data = load_config()
 		rows = data.get("rows", {})
 		if not rows:
@@ -418,41 +453,118 @@ class ControlApp:
 		except (ValueError, tk.TclError):
 			messagebox.showerror("Error", "Configuración global inválida.")
 			return
-
 		if n < 1:
 			messagebox.showerror("Error", "Terminales debe ser >= 1.")
 			return
-		
+
 		cv_worker = CVWorker()
 		cv_worker.start()
 
-		# Recorre todas las filas guardadas
-		for key in sorted(rows.keys(), key=lambda x: int(x) if str(x).isdigit() else str(x)):
-			row = rows[key]
-			start = row.get("start", {})
-			end = row.get("end", {})
-			if not start or not end:
-				print(f"Fila {key}: faltan puntos start/end. Se omite.")
-				continue
+		rows_map = {}
+		try:
+			for key in sorted(rows.keys(), key=lambda x: int(x) if str(x).isdigit() else str(x)):
+				row = rows[key]
+				start = row.get("start", {})
+				end = row.get("end", {})
+				if not start or not end:
+					print(f"Fila {key}: faltan puntos start/end. Se omite.")
+					continue
 
-			start_coords = (start.get('x', 0), start.get('y', 0), start.get('z', 0), start.get('r', 0))
-			end_coords   = (end.get('x', 0),   end.get('y', 0),   end.get('z', 0),   end.get('r', 0))
-			skips = _parse_skips(row.get("skips", ""), n)
+				start_coords = (start.get('x', 0), start.get('y', 0), start.get('z', 0), start.get('r', 0))
+				end_coords   = (end.get('x', 0),   end.get('y', 0),   end.get('z', 0),   end.get('r', 0))
+				skips = _parse_skips(row.get("skips", ""), n)
 
-			print(f"Iniciando prueba fila {key} con {n} terminales. Skips={sorted(skips)}")
-			modular_test_row_between(
-				start_coords,
-				end_coords,
-				n,
-				down,
-				side,
-				cv_worker,
-				speed=speed,
-				acc=acc,
-				skips=skips
-			)
+				prev_len = len(cv_worker.getTerminalResults())
 
-			print(cv_worker.getTerminalResults())
+				try:
+					modular_test_row_between(
+						start_coords,
+						end_coords,
+						n,
+						down,
+						side,
+						cv_worker,
+						speed=speed,
+						acc=acc,
+						skips=skips
+					)
+				except RuntimeError as e:
+					if str(e) == "DOBOT_DISABLED":
+						messagebox.showerror("Dobot deshabilitado", "Primero activa el Dobot antes de continuar.")
+						return
+					raise
+
+				all_terms = cv_worker.getTerminalResults()
+				new_terms = all_terms[prev_len:]  # solo esta fila
+
+				row_status = []
+				iter_terms = iter(new_terms)
+				for idx in range(1, n+1):
+					if idx in skips:
+						row_status.append(None)
+					else:
+						try:
+							samples = next(iter_terms)
+						except StopIteration:
+							samples = []
+						row_status.append(self._term_status(samples))
+				rows_map[key] = row_status
+
+		finally:
+			cv_worker.stop()
+
+		self._render_results(rows_map, n)
+
+	def _term_status(self, term_samples):
+		# term_samples: lista como [(passed_bool, angle), (passed_bool, angle)]
+		if not term_samples:
+			return None
+		pts = sum(1 for b, _ in term_samples if bool(b))
+		# 2->verde, 1->amarillo, 0->rojo
+		return pts
+
+	def _render_results(self, rows_map, n):
+		# rows_map: dict { "1": [status_or_None]*n, ... }
+		self.results_canvas.delete("all")
+		row_keys = sorted(rows_map.keys(), key=lambda x: int(x) if str(x).isdigit() else str(x))
+		num_rows = len(row_keys)
+		if num_rows == 0 or n < 1:
+			return
+
+		cell = 22
+		gap = 6
+		lpad = 60
+		tpad = 20
+
+		w = lpad + n*cell + (n-1)*gap + 20
+		h = tpad + num_rows*cell + (num_rows-1)*gap + 20
+		self.results_canvas.config(width=w, height=h)
+
+		for ri, rk in enumerate(row_keys):
+			y = tpad + ri*(cell+gap)
+			# etiqueta fila
+			self.results_canvas.create_text(10, y+cell/2, text=f"Fila {rk}", anchor="w", font=("Arial", 10))
+			row_vals = rows_map[rk]
+			for ci in range(n):
+				x = lpad + ci*(cell+gap)
+				val = row_vals[ci]  # None=skip, 0,1,2
+				if val is None:
+					fill = "#bfbfbf"   # gris: skip
+				elif val == 2:
+					fill = "#31a354"   # verde
+				elif val == 1:
+					fill = "#ffd24d"   # amarillo
+				else:
+					fill = "#de2d26"   # rojo
+				self.results_canvas.create_rectangle(x, y, x+cell, y+cell, fill=fill, outline="#333")
+
+
+	def _ensure_enabled(self):
+		if not is_dobot_enabled():
+			messagebox.showerror("Dobot deshabilitado", "Primero activa el Dobot antes de continuar.")
+			return False
+		return True
+
 
 
 if __name__ == "__main__":

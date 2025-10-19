@@ -5,7 +5,8 @@ def prod_test_terminal(down_movement, side_movement, cv_worker):
 	speed_slow = 1
 	acc_slow = 1
 
-	cv_worker.initTerminal()
+	if cv_worker:
+		cv_worker.initTerminal()
 
 	# Move torquemeter down
 	moveDobotToRelative((0, 0, -down_movement, 0), speed_slow, acc_slow)
@@ -13,7 +14,8 @@ def prod_test_terminal(down_movement, side_movement, cv_worker):
 	# # Move torquimeter to the sides
 	# Right
 	moveDobotToRelative((0, side_movement, 0, 0), speed_slow, acc_slow)
-	cv_worker.saveTerminalState()
+	if cv_worker:
+		cv_worker.saveTerminalState()
 	moveDobotToRelative((0, -side_movement, 1, 0), speed_slow, acc_slow)
 
 	# Pressure Relief
@@ -22,7 +24,8 @@ def prod_test_terminal(down_movement, side_movement, cv_worker):
 
 	# Left
 	moveDobotToRelative((0, -side_movement, -1, 0), speed_slow, acc_slow)
-	cv_worker.saveTerminalState()
+	if cv_worker:
+		cv_worker.saveTerminalState()
 	moveDobotToRelative((0, side_movement, 0, 0), speed_slow, acc_slow)
 
 

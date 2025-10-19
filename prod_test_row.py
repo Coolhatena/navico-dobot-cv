@@ -41,7 +41,7 @@ def modular_test_row(row, down_movement, side_movement):
 		print(f"Terminal index: {terminal_index}")
 	
 
-def modular_test_row_between(start_pt, end_pt, n, down_movement, side_movement, cv_worker, speed=5, acc=5, skips=None):
+def modular_test_row_between(start_pt, end_pt, n, down_movement, side_movement, cv_worker=None, speed=5, acc=5, skips=None):
 	print(f"Numero de terminales: {n}")
 	# start_pt/end_pt: (x, y, z, r)
 	# n: número de terminales (>=1)

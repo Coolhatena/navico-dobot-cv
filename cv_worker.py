@@ -173,8 +173,8 @@ class CVWorker:
 
 
 if __name__ == "__main__":
-	cvw = CVWorker()
+	cvw = CVWorker(show=True)
 	cvw.start()
 
 	while True:
-		print(cvw.pass_condition()[0])
+		print(cvw.pass_condition())

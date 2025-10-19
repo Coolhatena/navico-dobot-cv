@@ -1,7 +1,11 @@
 from tcp_dobot import send_command
 from get_dobot_position import get_dobot_position
 from set_arm_orientation import setArmOrientation
+from dobot_status import is_dobot_enabled
 
+def _guard_enabled():
+	if not is_dobot_enabled():
+		raise RuntimeError("DOBOT_DISABLED")
 
 # Position need to be compared this way because there may be a slight difference 
 # in the position values when the dobot is moving
@@ -10,6 +14,7 @@ def _compare_positions(position1, position2, max_difference=0.5):
 
 
 def moveDobotTo(point, speed=1, acc=1, port=30003):
+	_guard_enabled()
 	x, y, z, r = point
 	setArmOrientation(y)
 	command = "MovJ({}, {}, {}, {}, SpeedJ={}, AccJ={})".format(x, y, z, r, speed, acc)
@@ -21,6 +26,7 @@ def moveDobotTo(point, speed=1, acc=1, port=30003):
 
 
 def moveDobotToRelative(point, speed=1, acc=1, port=30003, verbose=False):
+	_guard_enabled()
 	original_position = get_dobot_position()
 	x, y, z, r = point
 	new_position = (original_position[0] + x, original_position[1] + y, original_position[2] + z, original_position[3] + r)

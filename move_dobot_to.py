@@ -10,19 +10,28 @@ def _guard_enabled():
 # Position need to be compared this way because there may be a slight difference 
 # in the position values when the dobot is moving
 def _compare_positions(position1, position2, max_difference=0.5):
-	return all(abs(x - y) < max_difference for x, y in zip(position1, position2))
+	print([abs(x - y) for x, y in zip(position1, position2)])
+	return all(abs(x - y) <= max_difference for x, y in zip(position1, position2))
 
 
-def moveDobotTo(point, speed=1, acc=1, port=30003):
+def moveDobotTo(point, speed=1, acc=1, port=30003, verbose=False):
 	_guard_enabled()
 	x, y, z, r = point
 	setArmOrientation(y)
 	command = "MovJ({}, {}, {}, {}, SpeedJ={}, AccJ={})".format(x, y, z, r, speed, acc)
 	send_command(command, port)
 
+	if verbose:
+		print(f"Sent: {command}")
+
 	is_position_reached = _compare_positions(point, get_dobot_position())
 	while not is_position_reached:
-		is_position_reached = _compare_positions(point, get_dobot_position())
+		current_position = get_dobot_position()
+		if verbose:
+			print(f"Current: {current_position}")
+
+		is_position_reached = _compare_positions(point, current_position)
+		print(is_position_reached)
 
 
 def moveDobotToRelative(point, speed=1, acc=1, port=30003, verbose=False):

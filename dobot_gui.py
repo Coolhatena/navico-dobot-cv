@@ -3,6 +3,7 @@ from tkinter import messagebox
 from tkinter import ttk
 import os
 import json
+import time
 from tcp_dobot import send_command
 from get_dobot_position import get_dobot_position
 from move_dobot_to import moveDobotTo
@@ -11,6 +12,7 @@ from prod_test_row import modular_test_row_between
 from cv_worker import CVWorker
 from dobot_status import enable_dobot, disable_dobot
 from dobot_status import is_dobot_enabled
+from relay_control import switchRelay
 
 CONFIG_PATH = "config.json"
 
@@ -138,13 +140,22 @@ class ControlApp:
 		right_frame = tk.Frame(container)
 		right_frame.grid(row=1, column=2, sticky="n", padx=20, pady=20)
 
+		self.relay_on = False
+		self._relay_buttons = []
+
+
 		tk.Label(right_frame, text="Velocidad:", anchor="w").pack()
 		tk.Entry(right_frame, textvariable=self.velocity, width=8).pack(pady=5)
 
 		tk.Label(right_frame, text="Aceleración:", anchor="w").pack()
 		tk.Entry(right_frame, textvariable=self.acceleration, width=8).pack(pady=5)
 
-		tk.Button(right_frame, text="Guardar Vel/Acel", command=self.save_speed_settings).pack(pady=(0, 12))
+		tk.Button(right_frame, text="Guardar Vel/Acel", command=self.save_speed_settings).pack(pady=(0, 8))
+
+		btn_relay_right = tk.Button(right_frame, text=self._relay_label(), command=self.turn_table_toggle)
+		btn_relay_right.pack(pady=(4, 12))
+		self._relay_buttons.append(btn_relay_right)
+
 
 		self.label = tk.Label(main_frame, text=self.get_coord_text(), font=("Arial", 14))
 		self.label.pack(pady=10)
@@ -188,7 +199,10 @@ class ControlApp:
 		self.results_canvas.pack(pady=(0, 10))
 
 		tk.Button(prueba_frame, text="Iniciar Prueba", command=lambda: self.complete_test()).pack(pady=10, padx=20)
-		tk.Button(prueba_frame, text="Calcular Coordenadas").pack(pady=10, padx=20)
+
+		btn_relay_test = tk.Button(prueba_frame, text=self._relay_label(), command=self.turn_table_toggle)
+		btn_relay_test.pack(pady=10, padx=20)
+		self._relay_buttons.append(btn_relay_test)
 
 		self._load_skips_into_entry()
 		self._load_settings_into_entries()
@@ -495,8 +509,7 @@ class ControlApp:
 					raise
 
 				all_terms = cv_worker.getTerminalResults()
-				new_terms = all_terms[prev_len:]  # solo esta fila
-
+				new_terms = all_terms[prev_len:]
 				row_status = []
 				iter_terms = iter(new_terms)
 				for idx in range(1, n+1):
@@ -516,15 +529,12 @@ class ControlApp:
 		self._render_results(rows_map, n)
 
 	def _term_status(self, term_samples):
-		# term_samples: lista como [(passed_bool, angle), (passed_bool, angle)]
 		if not term_samples:
 			return None
 		pts = sum(1 for b, _ in term_samples if bool(b))
-		# 2->verde, 1->amarillo, 0->rojo
 		return pts
 
 	def _render_results(self, rows_map, n):
-		# rows_map: dict { "1": [status_or_None]*n, ... }
 		self.results_canvas.delete("all")
 		row_keys = sorted(rows_map.keys(), key=lambda x: int(x) if str(x).isdigit() else str(x))
 		num_rows = len(row_keys)
@@ -542,22 +552,20 @@ class ControlApp:
 
 		for ri, rk in enumerate(row_keys):
 			y = tpad + ri*(cell+gap)
-			# etiqueta fila
 			self.results_canvas.create_text(10, y+cell/2, text=f"Fila {rk}", anchor="w", font=("Arial", 10))
 			row_vals = rows_map[rk]
 			for ci in range(n):
 				x = lpad + ci*(cell+gap)
-				val = row_vals[ci]  # None=skip, 0,1,2
+				val = row_vals[ci]
 				if val is None:
-					fill = "#bfbfbf"   # gris: skip
+					fill = "#bfbfbf"
 				elif val == 2:
-					fill = "#31a354"   # verde
+					fill = "#31a354"
 				elif val == 1:
-					fill = "#ffd24d"   # amarillo
+					fill = "#ffd24d"
 				else:
-					fill = "#de2d26"   # rojo
+					fill = "#de2d26"
 				self.results_canvas.create_rectangle(x, y, x+cell, y+cell, fill=fill, outline="#333")
-
 
 	def _ensure_enabled(self):
 		if not is_dobot_enabled():
@@ -565,6 +573,22 @@ class ControlApp:
 			return False
 		return True
 
+	def _relay_label(self):
+		return "Activar Mesa" if not self.relay_on else "Desactivar Mesa"
+
+	def _refresh_relay_buttons(self):
+		txt = self._relay_label()
+		for b in self._relay_buttons:
+			b.config(text=txt)
+
+	def turn_table_toggle(self):
+		try:
+			# Si está apagado -> encender; si está encendido -> apagar
+			switchRelay(True if not self.relay_on else False)
+			self.relay_on = not self.relay_on
+			self._refresh_relay_buttons()
+		except Exception as e:
+			messagebox.showerror("Relevador", f"No se pudo accionar el relevador:\n{e}")
 
 
 if __name__ == "__main__":

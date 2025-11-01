@@ -574,7 +574,8 @@ class ControlApp:
 		return True
 
 	def _relay_label(self):
-		return "Activar Mesa" if not self.relay_on else "Desactivar Mesa"
+		# Left this prepared for displaying different messages
+		return "Girar Mesa" if not self.relay_on else "Girar Mesa"
 
 	def _refresh_relay_buttons(self):
 		txt = self._relay_label()

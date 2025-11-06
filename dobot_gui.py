@@ -6,13 +6,14 @@ import json
 import time
 from tcp_dobot import send_command
 from get_dobot_position import get_dobot_position
-from move_dobot_to import moveDobotTo
+from move_dobot_to import moveDobotTo, moveDobotToRelative
 from dummy_test import modular_full_dummy_test
 from prod_test_row import modular_test_row_between
 from cv_worker import CVWorker
 from dobot_status import enable_dobot, disable_dobot
 from dobot_status import is_dobot_enabled
 from relay_control import switchRelay
+from cv_worker_position import CVWorkerPositioning
 
 CONFIG_PATH = "config.json"
 
@@ -448,8 +449,87 @@ class ControlApp:
 				return
 			raise
 
+	def check_bounds(self):
+		if not self._ensure_enabled():
+			return
+
+		data = load_config()
+		rows = data.get("rows", {})
+		if not rows:
+			messagebox.showerror("Error", "No hay filas guardadas.")
+			return
+
+		# Order keys
+		row_keys = sorted(rows.keys(), key=lambda x: int(x) if str(x).isdigit() else str(x))
+		first_key = row_keys[0]
+		last_key  = row_keys[-1]
+
+		first_row = rows.get(first_key, {})
+		last_row  = rows.get(last_key, {})
+
+		start = first_row.get("start") or {}
+		end   = last_row.get("end") or {}
+
+		if not start:
+			messagebox.showerror("Error", f"No hay punto inicial guardado para la fila {first_key}.")
+			return
+		if not end:
+			messagebox.showerror("Error", f"No hay punto final guardado para la fila {last_key}.")
+			return
+
+		try:
+			speed = int(data.get("velocity", self.velocity.get()))
+			acc   = int(data.get("acceleration", self.acceleration.get()))
+		except Exception:
+			messagebox.showerror("Error", "Velocidad/Aceleración inválidas.")
+			return
+
+		# Build coords
+		p_start = (
+			float(start.get('x', 0)),
+			float(start.get('y', 0)),
+			float(start.get('z', 0)),
+			float(start.get('r', 0)),
+		)
+		p_end = (
+			float(end.get('x', 0)),
+			float(end.get('y', 0)),
+			float(end.get('z', 0)),
+			float(end.get('r', 0)),
+		)
+
+		try:
+			cvwp = CVWorkerPositioning(
+				show=False,
+				template_paths=["positioning/referencia2.png", "positioning/referencia1.png"],
+				match_thresh=0.60,
+				rotate_step_deg=15
+			)
+			cvwp.start()
+			moveDobotTo(p_start, speed, acc)
+			moveDobotToRelative((50, 0, 0, 0), speed, acc) # Move dobot +50 x to get camera above terminal
+			time.sleep(0.5) # Wait for camera to focus
+			check1 = cvwp.test()
+			moveDobotTo(p_end,   speed, acc)
+			moveDobotToRelative((50, 0, 0, 0), speed, acc)
+			time.sleep(0.5)
+			check2 = cvwp.test()
+			cvwp.stop()
+
+			return check1 and check2
+		except RuntimeError as e:
+			if str(e) == "DOBOT_DISABLED":
+				messagebox.showerror("Dobot deshabilitado", "Primero activa el Dobot antes de continuar.")
+				return
+			raise
+
+
 	def complete_test(self):
 		if not self._ensure_enabled():
+			return
+		
+		# Check corners before complete test
+		if not self.check_bounds():
 			return
 	
 		data = load_config()

@@ -242,6 +242,7 @@ class ControlApp:
 		save_config(data)
 
 	def save_motion_settings(self):
+		self._save_skips_from_entry()
 		try:
 			down = float(self.down_movement_var.get())
 			side = float(self.side_movement_var.get())
@@ -395,8 +396,6 @@ class ControlApp:
 	def test_row(self):
 		if not self._ensure_enabled():
 			return
-		
-		self._save_skips_from_entry()
 
 		profile = self.profile_var.get()
 		data = load_config()
@@ -500,6 +499,7 @@ class ControlApp:
 
 		try:
 			cvwp = CVWorkerPositioning(
+				cam_index=2,
 				show=False,
 				template_paths=["positioning/referencia2.png", "positioning/referencia1.png"],
 				match_thresh=0.60,
@@ -551,7 +551,7 @@ class ControlApp:
 			messagebox.showerror("Error", "Terminales debe ser >= 1.")
 			return
 
-		cv_worker = CVWorker()
+		cv_worker = CVWorker(show=True, cam_index=4)
 		cv_worker.start()
 
 		rows_map = {}
@@ -642,7 +642,7 @@ class ControlApp:
 				elif val == 2:
 					fill = "#31a354"
 				elif val == 1:
-					fill = "#ffd24d"
+					fill = "#31a354"
 				else:
 					fill = "#de2d26"
 				self.results_canvas.create_rectangle(x, y, x+cell, y+cell, fill=fill, outline="#333")

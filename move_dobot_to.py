@@ -53,7 +53,8 @@ def moveDobotToRelative(point, speed=1, acc=1, port=30003, verbose=False):
 			print(f"Current position: {get_dobot_position()}")
 			print(f"Should be: {new_position}")
 
-	print(f'MOVEMENT TO {point} DONE\n\n') 
+	if verbose:
+		print(f'MOVEMENT TO {point} DONE\n\n') 
 
 
 if __name__ == "__main__":

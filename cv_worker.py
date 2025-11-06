@@ -77,6 +77,7 @@ class CVWorker:
 	def pass_condition(self, tol=None):
 		tol = self.tol_deg if tol is None else float(tol)
 		a = self.latest()
+		print(f"Tool angle: {abs(a - 90.0)}")
 		return (a is None) or (abs(a - 90.0) > tol), a
 	
 	def initTerminal(self):

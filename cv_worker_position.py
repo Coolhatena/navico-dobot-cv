@@ -5,7 +5,7 @@ import threading
 import time
 from collections import deque
 
-class CVWorker:
+class CVWorkerPositioning:
 	def __init__(
 		self,
 		cam_index=2,
@@ -56,7 +56,7 @@ class CVWorker:
 		hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 		msk = cv2.inRange(hsv, lo, hi)
 		grey = cv2.cvtColor(cv2.bitwise_and(image, image, mask=msk), cv2.COLOR_BGR2GRAY)
-		return CVWorker._binarize_u8(grey)  # CAMBIO: ahora devuelvo binario directo
+		return CVWorkerPositioning._binarize_u8(grey)  # CAMBIO: ahora devuelvo binario directo
 
 	def _prepare_templates(self):
 		self.templates.clear()
@@ -127,6 +127,27 @@ class CVWorker:
 			return None
 		vals.sort()
 		return vals[len(vals)//2]
+	
+	def test(self) -> bool:
+		if not self.cam or not self.cam.isOpened():
+			raise RuntimeError("La cámara no está inicializada. Usa start() antes de test().")
+
+		ok, frame = self.cam.read()
+		if not ok or frame is None:
+			return False
+
+		r0, r1 = self.roi_rows
+		c0, c1 = self.roi_cols
+		roi = frame[r0:r1, c0:c1]
+		img_bw = self._hsv_color_filter(roi, self.blue_lo, self.blue_hi)
+
+		found, score, loc, wh, ang, name = self._find_template(img_bw)
+		if found:
+			print(f"[MATCH] {name} score={score:.2f} angle={ang:.1f}")
+		else:
+			print(f"[NO MATCH] max_score={score:.2f}")
+
+		return bool(found)
 
 	@staticmethod
 	def _euclid(p1, p2):
@@ -171,8 +192,8 @@ if __name__ == "__main__":
 	# Ejemplo:
 	# - template_path: ruta al PNG binario de referencia
 	# - rotate_step_deg: define rotaciones para tolerar orientaciones
-	cvw = CVWorker(
-		show=True,
+	cvw = CVWorkerPositioning(
+		show=False,
 		template_paths=["positioning/referencia2.png", "positioning/referencia1.png"],
 		match_thresh=0.60,
 		rotate_step_deg=15

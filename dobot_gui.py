@@ -514,7 +514,7 @@ class ControlApp:
 			moveDobotToRelative((50, 0, 0, 0), speed, acc)
 			time.sleep(0.5)
 			check2 = cvwp.test()
-			cvwp.stop()
+			cvwp.stop() # Stop camera
 
 			return check1 and check2
 		except RuntimeError as e:

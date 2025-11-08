@@ -6,6 +6,7 @@ import time
 from collections import deque
 
 class CVWorkerPositioning:
+	# TODO: Remove unnecesary params
 	def __init__(
 		self,
 		cam_index=2,
